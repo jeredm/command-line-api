@@ -11,6 +11,61 @@ namespace System.CommandLine.DragonFruit
 {
     public class EntryPointDiscoverer
     {
+        private class KeyComparer : IEqualityComparer<(Type, string)>
+        {
+            public static KeyComparer Default { get; } = new KeyComparer();
+
+            public bool Equals((Type, string) x, (Type, string) y)
+                => string.Equals(x.Item2, y.Item2, StringComparison.OrdinalIgnoreCase) &&
+                x.Item1 == y.Item1;
+
+            public int GetHashCode((Type, string) obj) => (obj.Item2?.ToLowerInvariant().GetHashCode()) ?? 0 ^ obj.Item1.GetHashCode();
+        }
+
+        public static IReadOnlyCollection<MethodInfo> FindCommandMethods(Type containerType)
+        {
+            var foundMethods = new Dictionary<(Type, string), MethodInfo>(KeyComparer.Default);
+            FindCommandMethods(containerType);
+            return foundMethods.Values;
+
+            bool FindCommandMethods(Type type)
+            {
+                Type[] nestedTypes = type.GetNestedTypes();
+
+                bool nestedTypeAddedMethod = false;
+                foreach (Type nestedType in nestedTypes)
+                {
+                    if (FindCommandMethods(nestedType))
+                    {
+                        nestedTypeAddedMethod = true;
+                    }
+                }
+
+                MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Static | BindingFlags.Public |
+                                                                    BindingFlags.NonPublic).Where(m =>
+                    m.ReturnType == typeof(void)
+                    || m.ReturnType == typeof(int)
+                    || m.ReturnType == typeof(Task)
+                    || m.ReturnType == typeof(Task<int>)).ToArray();
+
+                if (nestedTypeAddedMethod && methodInfos.Any()) throw new InvalidProgramException();
+
+                bool addedMethod = false;
+                foreach (MethodInfo method in methodInfos)
+                {
+
+                    if (foundMethods.ContainsKey((type, method.Name))) throw new AmbiguousMatchException($"Multiple methods named \"{method.Name}\" found.");
+                    foundMethods.Add((type, method.Name), method);
+                    addedMethod = true;
+
+                }
+
+                return addedMethod || nestedTypeAddedMethod;
+            }
+
+
+        }
+
         public static MethodInfo FindStaticEntryMethod(Assembly assembly)
         {
             var candidates = new List<MethodInfo>();
