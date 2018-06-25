@@ -1,13 +1,15 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.CommandLine.Parser;
+
 namespace System.CommandLine.Invocation
 {
     public class InvocationContext
     {
         public InvocationContext(
             ParseResult parseResult,
-            Parser parser,
+            Parser.Parser parser,
             IConsole console)
         {
             ParseResult = parseResult ?? throw new ArgumentNullException(nameof(parseResult));
@@ -15,7 +17,7 @@ namespace System.CommandLine.Invocation
             Console = console;
         }
 
-        public Parser Parser { get; }
+        public Parser.Parser Parser { get; }
 
         public ParseResult ParseResult { get; set; }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using System.Linq;
 using FluentAssertions;
 using Xunit;
@@ -153,7 +154,7 @@ namespace System.CommandLine.Tests
             string delimiter, 
             string template)
         {
-            Action create = () => new Parser(
+            Action create = () => new Parser.Parser(
                 new OptionDefinition(
                     string.Format(template, delimiter), "",
                     new ArgumentDefinitionBuilder().ExactlyOne()));

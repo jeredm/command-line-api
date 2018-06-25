@@ -3,6 +3,7 @@
 
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parser;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -66,7 +67,7 @@ namespace System.CommandLine.DragonFruit
 
             SetHelpMetadata(method, builder);
 
-            Parser parser = builder.Build();
+            Parser.Parser parser = builder.Build();
 
             return await parser.InvokeAsync(args, console);
         }

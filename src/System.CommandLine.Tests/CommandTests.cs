@@ -5,18 +5,19 @@ using System.CommandLine.Builder;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {
     public class CommandTests
     {
-        private readonly Parser _parser;
+        private readonly Parser.Parser _parser;
 
         public CommandTests()
         {
             var builder = new ArgumentDefinitionBuilder();
 
-            _parser = new Parser(
+            _parser = new Parser.Parser(
                 new CommandDefinition("outer", "", new[] {
                     new CommandDefinition("inner", "", new[] {
                         new OptionDefinition(
@@ -127,7 +128,7 @@ namespace System.CommandLine.Tests
             string delimiter, 
             string template)
         {
-            Action create = () => new Parser(
+            Action create = () => new Parser.Parser(
                 new CommandDefinition(
                     string.Format(template, delimiter), "",
                     new ArgumentDefinitionBuilder().ExactlyOne()));

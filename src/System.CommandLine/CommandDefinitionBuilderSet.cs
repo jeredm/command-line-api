@@ -4,7 +4,8 @@
 using System.Collections.Generic;
 using System.CommandLine.Builder;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public class CommandDefinitionBuilderSet : AliasedSet<CommandDefinitionBuilder>
     {

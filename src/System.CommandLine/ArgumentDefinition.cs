@@ -4,7 +4,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public class ArgumentDefinition
     {
@@ -45,7 +46,7 @@ namespace System.CommandLine
 
         internal static ArgumentDefinition None { get; } = new ArgumentDefinition(
             new ArgumentParser(
-                System.CommandLine.ArgumentArity.Zero,
+                System.CommandLine.Parser.ArgumentArity.Zero,
                 symbol =>
                 {
                     if (symbol.Arguments.Any())

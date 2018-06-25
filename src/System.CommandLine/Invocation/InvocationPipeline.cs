@@ -1,6 +1,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.CommandLine.Parser;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,10 +10,10 @@ namespace System.CommandLine.Invocation
     internal class InvocationPipeline
     {
         private readonly ParseResult parseResult;
-        private readonly Parser parser;
+        private readonly Parser.Parser parser;
 
         public InvocationPipeline(
-            Parser parser,
+            Parser.Parser parser,
             ParseResult parseResult)
         {
             this.parser = parser ?? throw new ArgumentNullException(nameof(parser));

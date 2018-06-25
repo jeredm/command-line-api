@@ -5,6 +5,7 @@ using System.IO;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {

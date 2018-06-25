@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.CommandLine.Parser;
 using System.Linq;
 
 namespace System.CommandLine.Builder
@@ -41,7 +42,7 @@ namespace System.CommandLine.Builder
         internal virtual ArgumentParser BuildArgumentParser()
         {
             var parser = new ArgumentParser(
-                ArgumentArity ?? CommandLine.ArgumentArity.Zero,
+                ArgumentArity ?? CommandLine.Parser.ArgumentArity.Zero,
                 ConvertArguments);
 
             return parser;

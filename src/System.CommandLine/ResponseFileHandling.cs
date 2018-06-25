@@ -1,4 +1,5 @@
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public enum ResponseFileHandling
     {

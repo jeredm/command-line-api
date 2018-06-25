@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parser;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,11 +29,11 @@ namespace System.CommandLine.Builder
 
         public ResponseFileHandling ResponseFileHandling { get; set; }
 
-        public Parser Build()
+        public Parser.Parser Build()
         {
             var rootCommand = BuildCommandDefinition();
 
-            return new Parser(
+            return new Parser.Parser(
                 new CommandLineConfiguration(
                     new[] { rootCommand },
                     prefixes: Prefixes,

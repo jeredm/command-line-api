@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +25,7 @@ namespace System.CommandLine.CompletionSuggestions
         {
             // CommandLine:
             // dotnet run System.CommandLine <currentCommandLine> <cursorPosition> Foo bar
-            Parser parser = new CommandLineBuilder()
+            Parser.Parser parser = new CommandLineBuilder()
                 .AddOption(Position, "the current character position on the command line",
                     position => position.ExactlyOne())
                 .AddOption(ExeName, "The executible to ask for argument resolution", argument => argument

@@ -4,9 +4,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using static System.CommandLine.ArgumentParseResult;
+using static System.CommandLine.Parser.ArgumentParseResult;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     internal static class ArgumentConverter
     {

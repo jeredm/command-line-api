@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public class SymbolDefinitionSet : AliasedSet<SymbolDefinition>
     {

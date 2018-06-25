@@ -10,6 +10,7 @@ using System.Reflection;
 using FluentAssertions.Common;
 using Xunit;
 using Xunit.Abstractions;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {
@@ -25,7 +26,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_option_without_a_long_form_can_be_checked_for_using_a_prefix()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition("--flag", ""))
                 .Parse("--flag");
 
@@ -37,7 +38,7 @@ namespace System.CommandLine.Tests
         {
             var option = new OptionDefinition("--flag", "");
             var option2 = new OptionDefinition("--flag2", "");
-            var result = new Parser(option, option2)
+            var result = new Parser.Parser(option, option2)
                 .Parse("--flag");
 
             result.HasOption(option).Should().BeTrue();
@@ -47,7 +48,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_option_without_a_long_form_can_be_checked_for_without_using_a_prefix()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition("--flag", ""))
                 .Parse("--flag");
 
@@ -57,7 +58,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_invoked_by_its_short_form_an_option_with_an_alias_can_be_checked_for_by_its_short_form()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition(new[] { "-o", "--one" }, ""))
                 .Parse("-o");
 
@@ -67,7 +68,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_invoked_by_its_long_form_an_option_with_an_alias_can_be_checked_for_by_its_short_form()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition(new[] { "-o", "--one" }, ""))
                 .Parse("--one");
 
@@ -77,7 +78,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_invoked_by_its_short_form_an_option_with_an_alias_can_be_checked_for_by_its_long_form()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition(new[] { "-o", "--one" }, ""))
                 .Parse("-o");
 
@@ -87,7 +88,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_invoked_by_its_long_form_an_option_with_an_alias_can_be_checked_for_by_its_long_form()
         {
-            var result = new Parser(
+            var result = new Parser.Parser(
                     new OptionDefinition(new[] { "-o", "--one" }, ""))
                 .Parse("--one");
 
@@ -97,7 +98,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Two_options_are_parsed_correctly()
         {
-            ParseResult result = new Parser(
+            ParseResult result = new Parser.Parser(
                     new OptionDefinition(
                         new[] { "-o", "--one" }, ""),
                     new OptionDefinition(
@@ -131,7 +132,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_no_options_are_specified_then_an_error_is_returned()
         {
-            Action create = () => new Parser();
+            Action create = () => new Parser.Parser();
 
             create.Should()
                   .Throw<ArgumentException>()
@@ -145,7 +146,7 @@ namespace System.CommandLine.Tests
         public void Two_options_cannot_have_conflicting_aliases()
         {
             Action create = () =>
-                new Parser(new OptionDefinition(
+                new Parser.Parser(new OptionDefinition(
                                new[] { "-o", "--one" }, ""),
                            new OptionDefinition(
                                new[] { "-t", "--one" }, ""));
@@ -161,7 +162,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void A_double_dash_delimiter_specifies_that_no_further_command_line_args_will_be_treated_as_options()
         {
-            var result = new Parser(new OptionDefinition(new[] { "-o", "--one" }, ""))
+            var result = new Parser.Parser(new OptionDefinition(new[] { "-o", "--one" }, ""))
                 .Parse("-o \"some stuff\" -- -x -y -z -o:foo");
 
             result.HasOption("o")
@@ -176,7 +177,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void The_portion_of_the_command_line_following_a_double_slash_is_accessible_as_UnparsedTokens()
         {
-            var result = new Parser(new OptionDefinition("-o", ""))
+            var result = new Parser.Parser(new OptionDefinition("-o", ""))
                 .Parse("-o \"some stuff\" -- x y z");
 
             result.UnparsedTokens
@@ -187,7 +188,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Short_form_options_can_be_specified_using_equals_delimiter()
         {
-            var parser = new Parser(new OptionDefinition(
+            var parser = new Parser.Parser(new OptionDefinition(
                                         "-x",
                                         "",
                                         argumentDefinition: new ArgumentDefinitionBuilder().ExactlyOne()));
@@ -202,7 +203,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Long_form_options_can_be_specified_using_equals_delimiter()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "--hello",
                     "",
@@ -218,7 +219,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Short_form_options_can_be_specified_using_colon_delimiter()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x",
                     "",
@@ -286,7 +287,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Option_long_forms_do_not_get_unbundled()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("the-command", "", new[] {
                     new OptionDefinition("--xyz", ""),
                     new OptionDefinition("-x", ""),
@@ -306,7 +307,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Options_do_not_get_unbundled_unless_all_resulting_options_would_be_valid_for_the_current_command()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("outer", "",
                                       new SymbolDefinition[] {
                                           new OptionDefinition("-a", ""),
@@ -334,7 +335,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Parser_root_Options_can_be_specified_multiple_times_and_their_arguments_are_collated()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     new[] { "-a", "--animals" }, "",
                     argumentDefinition: new ArgumentDefinitionBuilder().ZeroOrMore()),
@@ -361,7 +362,7 @@ namespace System.CommandLine.Tests
             var builder = new ArgumentDefinitionBuilder();
             ArgumentDefinition rule = builder.FromAmong("dog", "cat", "sheep").ZeroOrMore();
 
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("the-command", "", new[] {
                     new OptionDefinition(
                         new[] { "-a", "--animals" },
@@ -391,7 +392,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_a_Parser_root_option_is_not_respecified_then_the_following_token_is_unmatched()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     new[] { "-a", "--animals" },
                     "",
@@ -422,7 +423,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_a_Command_option_is_not_respecified_then_the_following_token_is_considered_an_argument_to_the_outer_command()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("the-command", "", new[] {
                                           new OptionDefinition(
                                               new[] { "-a", "--animals" }, "",
@@ -466,7 +467,7 @@ namespace System.CommandLine.Tests
                                                        argumentDefinition: new ArgumentDefinitionBuilder().ExactlyOne())
                                                });
 
-            var parser = new Parser(option);
+            var parser = new Parser.Parser(option);
 
             var result = parser.Parse("outer --inner1 argument1 --inner2 argument2");
 
@@ -819,7 +820,7 @@ namespace System.CommandLine.Tests
             var command =
                 @"rm ""/temp/the file.txt""";
 
-            var parser = new Parser(new CommandDefinition("rm", "", new ArgumentDefinitionBuilder().ZeroOrMore()));
+            var parser = new Parser.Parser(new CommandDefinition("rm", "", new ArgumentDefinitionBuilder().ZeroOrMore()));
 
             var result = parser.Parse(command);
 
@@ -835,7 +836,7 @@ namespace System.CommandLine.Tests
             var command =
                 @"rm ""c:\temp\the file.txt\""";
 
-            var parser = new Parser(new CommandDefinition("rm", "", new ArgumentDefinitionBuilder().ZeroOrMore()));
+            var parser = new Parser.Parser(new CommandDefinition("rm", "", new ArgumentDefinitionBuilder().ZeroOrMore()));
 
             ParseResult result = parser.Parse(command);
 
@@ -953,7 +954,7 @@ namespace System.CommandLine.Tests
                 },
                 new ArgumentDefinitionBuilder().ZeroOrMore());
 
-            var parser = new Parser(outerCommand);
+            var parser = new Parser.Parser(outerCommand);
 
             parser.Parse("outer inner").Command
                   .Definition
@@ -983,7 +984,7 @@ namespace System.CommandLine.Tests
             var option1 = new OptionDefinition(new[] { "-a" }, "");
             var option2 = new OptionDefinition(new[] { "--a" }, "");
 
-            var parser = new Parser(option1, option2);
+            var parser = new Parser.Parser(option1, option2);
 
             parser.Parse("-a").Command
                   .Children
@@ -1006,7 +1007,7 @@ namespace System.CommandLine.Tests
         [InlineData("-x:\"\"", "")]
         public void When_an_argument_is_enclosed_in_double_quotes_its_value_has_the_quotes_removed(string input, string expected)
         {
-            ParseResult parseResult = new Parser(
+            ParseResult parseResult = new Parser.Parser(
                     new OptionDefinition(
                         "-x",
                         "",
@@ -1067,7 +1068,7 @@ namespace System.CommandLine.Tests
             var configuration = new CommandLineConfiguration(
                 new[] { option },
                 prefixes: new[] { "-", "--", "/" });
-            var parser = new Parser(configuration);
+            var parser = new Parser.Parser(configuration);
 
             ParseResult parseResult = parser.Parse(input);
             parseResult["output"].Should().NotBeNull();
@@ -1087,7 +1088,7 @@ namespace System.CommandLine.Tests
             var configuration = new CommandLineConfiguration(
                 new[] { option },
                 prefixes: new[] { "-", "--", "/" });
-            var parser = new Parser(configuration);
+            var parser = new Parser.Parser(configuration);
 
             ParseResult parseResult = parser.Parse(input);
             parseResult["o"].Should().NotBeNull();

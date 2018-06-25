@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using FluentAssertions;
 using Xunit;
 using static System.CommandLine.Builder.CommandLineBuilder;
@@ -13,7 +14,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Parse_result_diagram_helps_explain_parse_operation()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition(
                     "the-command", "",
                     new[] {
@@ -37,7 +38,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Parse_result_diagram_displays_unmatched_tokens()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("command", "", new[] {
                     new OptionDefinition(
                         "-x",

@@ -3,6 +3,7 @@
 
 using FluentAssertions;
 using Xunit;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.DragonFruit.Tests
 {

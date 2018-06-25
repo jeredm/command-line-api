@@ -3,7 +3,8 @@
 
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public static class ParserExtensions
     {

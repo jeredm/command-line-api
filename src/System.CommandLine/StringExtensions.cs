@@ -8,7 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public static class StringExtensions
     {

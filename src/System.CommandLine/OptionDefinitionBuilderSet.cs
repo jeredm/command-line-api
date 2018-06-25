@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.CommandLine.Builder;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public class OptionDefinitionBuilderSet : AliasedSet<OptionDefinitionBuilder>
     {

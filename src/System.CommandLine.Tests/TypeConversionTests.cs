@@ -7,6 +7,7 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {
@@ -15,7 +16,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void ParseArgumentsAs_can_specify_custom_types_and_conversion_logic()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("custom", "",
                                       new ArgumentDefinitionBuilder()
                                           .ParseArgumentsAs<MyCustomType>(parsed => {

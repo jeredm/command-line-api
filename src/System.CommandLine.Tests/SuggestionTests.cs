@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -180,7 +181,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Parser_options_can_supply_context_sensitive_matches()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "--bread", "",
                     new ArgumentDefinitionBuilder()
@@ -243,7 +244,7 @@ namespace System.CommandLine.Tests
         [InlineData("outer -")]
         public void Option_suggestions_are_not_provided_without_matching_prefix(string input)
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("outer", "", new[] {
                     new OptionDefinition("--one", "Option one"),
                     new OptionDefinition("--two", "Option two"),
@@ -257,7 +258,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Option_suggestions_can_be_based_on_the_proximate_option()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("outer", "", new[] {
                     new OptionDefinition("--one", "Option one"),
                     new OptionDefinition("--two", "Option two"),
@@ -271,7 +272,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Argument_suggestions_can_be_based_on_the_proximate_option()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition("outer", "", new[] {
                     new OptionDefinition(
                         "--one",
@@ -295,7 +296,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void Option_suggestions_can_be_based_on_the_proximate_option_and_partial_input()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new CommandDefinition(
                     "outer", "",
                     new[] {

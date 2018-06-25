@@ -1,5 +1,6 @@
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parser;
 using FluentAssertions;
 using System.Linq;
 using System.Reflection;

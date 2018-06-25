@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     internal static class EnumerableExtensions
     {

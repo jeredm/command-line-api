@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using FluentAssertions;
 using Xunit;
 
@@ -80,12 +81,12 @@ namespace System.CommandLine.Tests
                 new CommandDefinition("inner-two", "", new ArgumentDefinitionBuilder().None())
             });
 
-            var result = new Parser(definition).Parse("outer inner-one inner-two");
+            var result = new Parser.Parser(definition).Parse("outer inner-one inner-two");
 
             result.Command.Name.Should().Be("inner-one");
             result.Errors.Count.Should().Be(1);
 
-            var result2 = new Parser(definition).Parse("outer inner-two inner-one");
+            var result2 = new Parser.Parser(definition).Parse("outer inner-two inner-one");
 
             result2.Command.Name.Should().Be("inner-two");
             result2.Errors.Count.Should().Be(1);

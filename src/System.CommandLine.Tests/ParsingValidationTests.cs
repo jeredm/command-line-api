@@ -4,6 +4,7 @@ using FluentAssertions;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {
@@ -20,7 +21,7 @@ namespace System.CommandLine.Tests
         public void When_an_option_accepts_only_specific_arguments_but_a_wrong_one_is_supplied_then_an_informative_error_is_returned()
         {
             var builder = new ArgumentDefinitionBuilder();
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x",
                     "",
@@ -42,7 +43,7 @@ namespace System.CommandLine.Tests
                 "",
                 builder.FromAmong("this", "that").ExactlyOne());
 
-            var parser = new Parser(option);
+            var parser = new Parser.Parser(option);
 
             var result = parser.Parse("-x something_else");
 
@@ -56,7 +57,7 @@ namespace System.CommandLine.Tests
         public void When_a_required_argument_is_not_supplied_then_an_error_is_returned()
         {
             var builder = new ArgumentDefinitionBuilder();
-            var parser = new Parser(new OptionDefinition(
+            var parser = new Parser.Parser(new OptionDefinition(
                                         "-x",
                                         "",
                                         builder.ExactlyOne()));
@@ -71,7 +72,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_no_option_accepts_arguments_but_one_is_supplied_then_an_error_is_returned()
         {
-            var parser = new Parser(new CommandDefinition("the-command", "", new[] {
+            var parser = new Parser.Parser(new CommandDefinition("the-command", "", new[] {
                 new OptionDefinition("-x", "")
             }));
 
@@ -210,7 +211,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_an_option_is_specified_more_than_once_but_only_allowed_once_then_an_informative_error_is_returned()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x",
                     "",
@@ -227,7 +228,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void ParseArgumentsAs_with_arity_of_One_validates_against_extra_arguments()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x",
                     "",
@@ -244,7 +245,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_an_option_has_a_default_value_it_is_not_valid_to_specify_the_option_without_an_argument()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x", "",
                     new ArgumentDefinitionBuilder()
@@ -262,7 +263,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_an_option_has_a_default_value_then_the_option_token_must_be_applied()
         {
-            var parser = new Parser(
+            var parser = new Parser.Parser(
                 new OptionDefinition(
                     "-x", "",
                     new ArgumentDefinitionBuilder()

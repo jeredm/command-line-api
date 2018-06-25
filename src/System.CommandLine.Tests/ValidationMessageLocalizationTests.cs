@@ -6,6 +6,7 @@ using System.CommandLine.Builder;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
+using System.CommandLine.Parser;
 
 namespace System.CommandLine.Tests
 {
@@ -18,7 +19,7 @@ namespace System.CommandLine.Tests
 
             var builder = new ArgumentDefinitionBuilder();
             var commandDefinition = new CommandDefinition("the-command", "", builder.ExactlyOne());
-            var parser = new Parser(new CommandLineConfiguration(new[] { commandDefinition }, validationMessages: messages));
+            var parser = new Parser.Parser(new CommandLineConfiguration(new[] { commandDefinition }, validationMessages: messages));
             var result = parser.Parse("the-command");
 
             result.Errors

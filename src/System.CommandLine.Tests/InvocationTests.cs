@@ -3,6 +3,7 @@
 
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parser;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;

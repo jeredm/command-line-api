@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -80,21 +81,21 @@ namespace System.CommandLine.Invocation
         }
 
         public static async Task<int> InvokeAsync(
-            this Parser parser,
+            this Parser.Parser parser,
             ParseResult parseResult,
             IConsole console) =>
             await new InvocationPipeline(parser, parseResult)
                 .InvokeAsync(console);
 
         public static async Task<int> InvokeAsync(
-            this Parser parser,
+            this Parser.Parser parser,
             string commandLine,
             IConsole console) =>
             await new InvocationPipeline(parser, parser.Parse(commandLine))
                 .InvokeAsync(console);
 
         public static async Task<int> InvokeAsync(
-            this Parser parser,
+            this Parser.Parser parser,
             string[] args,
             IConsole console) =>
             await new InvocationPipeline(parser, parser.Parse(args))

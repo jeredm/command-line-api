@@ -1,4 +1,5 @@
 using System.CommandLine.Builder;
+using System.CommandLine.Parser;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -27,7 +28,7 @@ namespace System.CommandLine.Tests
             {
                 s.Write("--flag");
             }
-            var result = new Parser(new OptionDefinition(
+            var result = new Parser.Parser(new OptionDefinition(
                     "--flag",
                     ""))
                 .Parse("@" + FilePath);

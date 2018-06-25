@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     public class ValidationMessages
     {

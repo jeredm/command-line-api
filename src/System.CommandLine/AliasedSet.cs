@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
+
 {
     [DebuggerStepThrough]
     public abstract class AliasedSet<T> : IReadOnlyCollection<T>

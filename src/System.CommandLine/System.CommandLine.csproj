@@ -6,4 +6,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="API\" />
+    <Folder Include="_dotnet\" />
+  </ItemGroup>
 </Project>
