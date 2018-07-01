@@ -96,23 +96,23 @@ namespace System.CommandLine.Tests.Help
         public void RawHelp_preserves_extra_whitespace()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand(
-                    "outer-command", "outer command help",
-                    arguments: outerArgs => outerArgs
-                        .WithHelp(name: "outer-args")
-                        .ZeroOrMore(),
-                    symbols: outer => outer.AddCommand(
-                        "inner-command", "inner    command\t help  with whitespace",
-                        arguments: args => args
-                            .WithHelp(name: "inner-args")
-                            .ZeroOrOne(),
-                        symbols: inner => inner.AddOption(
-                            new[] { "-v", "--verbosity" },
-                            "Inner    option \twith spaces")))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand(
+                "outer-command", "outer command help",
+                arguments: outerArgs => outerArgs
+                    .WithHelp(name: "outer-args")
+                    .ZeroOrMore(),
+                symbols: outer => outer.AddCommand(
+                    "inner-command", "inner    command\t help  with whitespace",
+                    arguments: args => args
+                        .WithHelp(name: "inner-args")
+                        .ZeroOrOne(),
+                    symbols: inner => inner.AddOption(
+                        new[] { "-v", "--verbosity" },
+                        "Inner    option \twith spaces")))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer-command")
@@ -137,23 +137,23 @@ namespace System.CommandLine.Tests.Help
         public void RawHelp_preserves_newlines()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand(
-                    "outer-command", "outer command help",
-                    arguments: outerArgs => outerArgs
-                        .WithHelp(name: "outer-args")
-                        .ZeroOrMore(),
-                    symbols: outer => outer.AddCommand(
-                        "inner-command", $"inner{NewLine}command help {NewLine} with {NewLine}newlines",
-                        arguments: args => args
-                            .WithHelp(name: "inner-args")
-                            .ZeroOrOne(),
-                        symbols: inner => inner.AddOption(
-                            new[] { "-v", "--verbosity" },
-                            $"Inner {NewLine} command {NewLine}option with{NewLine} newlines")))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand(
+                "outer-command", "outer command help",
+                arguments: outerArgs => outerArgs
+                    .WithHelp(name: "outer-args")
+                    .ZeroOrMore(),
+                symbols: outer => outer.AddCommand(
+                    "inner-command", $"inner{NewLine}command help {NewLine} with {NewLine}newlines",
+                    arguments: args => args
+                        .WithHelp(name: "inner-args")
+                        .ZeroOrOne(),
+                    symbols: inner => inner.AddOption(
+                        new[] { "-v", "--verbosity" },
+                        $"Inner {NewLine} command {NewLine}option with{NewLine} newlines")))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer-command")
@@ -185,23 +185,23 @@ namespace System.CommandLine.Tests.Help
         {
             var longText = $"The{NewLine}subcommand with line breaks that is long enough to wrap to a{NewLine}new line";
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = GetHelpBuilder(SmallMaxWidth),
-                }
-                .AddCommand(
-                    "outer-command", "outer command help",
-                    arguments: outerArgs => outerArgs
-                        .WithHelp(name: "outer-args")
-                        .ZeroOrMore(),
-                    symbols: outer => outer.AddCommand(
-                        "inner-command", longText,
-                        arguments: args => args
-                            .WithHelp(name: "inner-args")
-                            .ZeroOrOne(),
-                        symbols: inner => inner.AddOption(
-                            new[] { "-v", "--verbosity" },
-                            longText)))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = GetHelpBuilder(SmallMaxWidth),
+            }
+            .AddCommand(
+                "outer-command", "outer command help",
+                arguments: outerArgs => outerArgs
+                    .WithHelp(name: "outer-args")
+                    .ZeroOrMore(),
+                symbols: outer => outer.AddCommand(
+                    "inner-command", longText,
+                    arguments: args => args
+                        .WithHelp(name: "inner-args")
+                        .ZeroOrOne(),
+                    symbols: inner => inner.AddOption(
+                        new[] { "-v", "--verbosity" },
+                        longText)))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer-command")
@@ -256,11 +256,11 @@ namespace System.CommandLine.Tests.Help
         public void Synopsis_section_preserves_newlines()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                    Description = $"test{NewLine}description with{NewLine}line breaks",
-                }
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+                Description = $"test{NewLine}description with{NewLine}line breaks",
+            }
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 
@@ -278,11 +278,11 @@ namespace System.CommandLine.Tests.Help
         {
             var longText = $"test{NewLine}description with line breaks that is long enough to wrap to a{NewLine}new line";
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = GetHelpBuilder(SmallMaxWidth),
-                    Description = longText,
-                }
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = GetHelpBuilder(SmallMaxWidth),
+                Description = longText,
+            }
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 
@@ -398,16 +398,16 @@ namespace System.CommandLine.Tests.Help
         public void Arguments_section_preserves_extra_whitespace()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand("outer", "Help text for the outer command",
-                    arguments: args => args
-                        .WithHelp(
-                            name: "outer-command-arg",
-                            description: "Argument\tfor the   inner command")
-                        .ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand("outer", "Help text for the outer command",
+                arguments: args => args
+                    .WithHelp(
+                        name: "outer-command-arg",
+                        description: "Argument\tfor the   inner command")
+                    .ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer")
@@ -424,16 +424,16 @@ namespace System.CommandLine.Tests.Help
         public void Arguments_section_preserves_newlines()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand("outer", "Help text for the outer command",
-                    arguments: args => args
-                        .WithHelp(
-                            name: "outer-command-arg",
-                            description: $"The argument{NewLine}for the{NewLine}inner command")
-                        .ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand("outer", "Help text for the outer command",
+                arguments: args => args
+                    .WithHelp(
+                        name: "outer-command-arg",
+                        description: $"The argument{NewLine}for the{NewLine}inner command")
+                    .ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer")
@@ -453,16 +453,16 @@ namespace System.CommandLine.Tests.Help
         {
             var longText = $"The argument{NewLine}for the inner command with line breaks that is long enough to wrap to a{NewLine}new line";
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = GetHelpBuilder(SmallMaxWidth),
-                }
-                .AddCommand("outer", "Help text for the outer command",
-                    arguments: args => args
-                        .WithHelp(
-                            name: "outer-command-arg",
-                            description: longText)
-                        .ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = GetHelpBuilder(SmallMaxWidth),
+            }
+            .AddCommand("outer", "Help text for the outer command",
+                arguments: args => args
+                    .WithHelp(
+                        name: "outer-command-arg",
+                        description: longText)
+                    .ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer")
@@ -486,15 +486,15 @@ namespace System.CommandLine.Tests.Help
         public void Options_section_preserves_extra_whitespace()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand("test-command", "Help text for the command",
-                    symbols => symbols
-                        .AddOption(
-                            new[] { "-a", "--aaa" },
-                            "Help   for      the   option"))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand("test-command", "Help text for the command",
+                symbols => symbols
+                    .AddOption(
+                        new[] { "-a", "--aaa" },
+                        "Help   for      the   option"))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("test-command")
@@ -511,15 +511,15 @@ namespace System.CommandLine.Tests.Help
         public void Options_section_preserves_newlines()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                }
-                .AddCommand("test-command", "Help text for the command",
-                    symbols => symbols
-                        .AddOption(
-                            new[] { "-a", "--aaa" },
-                            $"Help{NewLine}for {NewLine} the{NewLine}option"))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+            }
+            .AddCommand("test-command", "Help text for the command",
+                symbols => symbols
+                    .AddOption(
+                        new[] { "-a", "--aaa" },
+                        $"Help{NewLine}for {NewLine} the{NewLine}option"))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("test-command")
@@ -540,15 +540,15 @@ namespace System.CommandLine.Tests.Help
         {
             var longText = $"The option{NewLine}with line breaks that is long enough to wrap to a{NewLine}new line";
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = GetHelpBuilder(SmallMaxWidth),
-                }
-                .AddCommand("test-command", "Help text for the command",
-                    symbols => symbols
-                        .AddOption(
-                            new[] { "-a", "--aaa" },
-                            longText))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = GetHelpBuilder(SmallMaxWidth),
+            }
+            .AddCommand("test-command", "Help text for the command",
+                symbols => symbols
+                    .AddOption(
+                        new[] { "-a", "--aaa" },
+                        longText))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("test-command")
@@ -571,13 +571,13 @@ namespace System.CommandLine.Tests.Help
         public void Subcommand_section_preserves_extra_whitespace()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                    Description = "test  description",
-                }
-                .AddCommand("outer", "Help text   for the outer   command",
-                    arguments: args => args.ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+                Description = "test  description",
+            }
+            .AddCommand("outer", "Help text   for the outer   command",
+                arguments: args => args.ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 
@@ -592,13 +592,13 @@ namespace System.CommandLine.Tests.Help
         public void Subcommand_section_preserves_newlines()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _rawHelpBuilder,
-                    Description = "test  description",
-                }
-                .AddCommand("outer", $"Help text{NewLine}for the outer{NewLine}command",
-                    arguments: args => args.ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _rawHelpBuilder,
+                Description = "test  description",
+            }
+            .AddCommand("outer", $"Help text{NewLine}for the outer{NewLine}command",
+                arguments: args => args.ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 
@@ -616,13 +616,13 @@ namespace System.CommandLine.Tests.Help
         {
             var longText = $"Help{NewLine}text with line breaks that is long enough to wrap to a{NewLine}new line";
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = GetHelpBuilder(SmallMaxWidth),
-                    Description = "test  description",
-                }
-                .AddCommand("outer", longText,
-                    arguments: args => args.ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = GetHelpBuilder(SmallMaxWidth),
+                Description = "test  description",
+            }
+            .AddCommand("outer", longText,
+                arguments: args => args.ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 

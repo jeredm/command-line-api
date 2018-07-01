@@ -71,13 +71,21 @@ namespace System.CommandLine.Tests.Help
         public void Usage_section_sets_and_resets_foreground_color()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _colorHelpBuilder,
-                    Description = "test  description",
-                }
-                .AddCommand("outer", "Help text   for the outer   command",
-                    arguments: args => args.ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _colorHelpBuilder,
+                Description = "test  description",
+            }
+            .AddCommand(
+                "outer-command", "command help",
+                arguments: outerArgs => outerArgs
+                    .WithHelp(name: $"outer  args \twith  whitespace")
+                    .ZeroOrMore(),
+                symbols: outer => outer.AddCommand(
+                    "inner-command", "command help",
+                    arguments: args => args
+                        .WithHelp(name: "inner-args")
+                        .ZeroOrOne()))
+            .BuildCommandDefinition();
 
             commandLineBuilder.WriteHelp(_console);
 
@@ -93,16 +101,16 @@ namespace System.CommandLine.Tests.Help
         public void Arguments_section_sets_and_resets_foreground_color()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _colorHelpBuilder,
-                }
-                .AddCommand("outer", "Help text for the outer command",
-                    arguments: args => args
-                        .WithHelp(
-                            name: "outer-command-arg",
-                            description: "Argument\tfor the   inner command")
-                        .ExactlyOne())
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _colorHelpBuilder,
+            }
+            .AddCommand("outer", "Help text for the outer command",
+                arguments: args => args
+                    .WithHelp(
+                        name: "outer-command-arg",
+                        description: "Argument\tfor the   inner command")
+                    .ExactlyOne())
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer")
@@ -120,15 +128,15 @@ namespace System.CommandLine.Tests.Help
         public void Options_section_sets_and_resets_foreground_color()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _colorHelpBuilder,
-                }
-                .AddCommand("test-command", "Help text for the command",
-                    symbols => symbols
-                        .AddOption(
-                            new[] { "-a", "--aaa" },
-                            "Help   for      the   option"))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _colorHelpBuilder,
+            }
+            .AddCommand("test-command", "Help text for the command",
+                symbols => symbols
+                    .AddOption(
+                        new[] { "-a", "--aaa" },
+                        "Help   for      the   option"))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("test-command")
@@ -146,27 +154,25 @@ namespace System.CommandLine.Tests.Help
         public void Subcommands_section_sets_and_resets_foreground_color()
         {
             var commandLineBuilder = new CommandLineBuilder
-                {
-                    HelpBuilder = _colorHelpBuilder,
-                }
-                .AddCommand(
-                    "outer-command", "outer command help",
-                    arguments: outerArgs => outerArgs
-                        .WithHelp(name: "outer-args")
-                        .ZeroOrMore(),
-                    symbols: outer => outer.AddCommand(
-                        "inner-command", "inner    command\t help  with whitespace",
-                        arguments: args => args
-                            .WithHelp(name: "inner-args")
-                            .ZeroOrOne(),
-                        symbols: inner => inner.AddOption(
-                            new[] { "-v", "--verbosity" },
-                            "Inner    option \twith spaces")))
-                .BuildCommandDefinition();
+            {
+                HelpBuilder = _colorHelpBuilder,
+            }
+            .AddCommand(
+                "outer-command", "outer command help",
+                arguments: outerArgs => outerArgs
+                    .WithHelp(name: "outer-args")
+                    .ZeroOrMore(),
+                symbols: outer => outer.AddCommand(
+                    "inner-command", "inner    command\t help  with whitespace",
+                    arguments: args => args
+                        .WithHelp(name: "inner-args")
+                        .ZeroOrOne(),
+                    symbols: inner => inner.AddOption(
+                        new[] { "-v", "--verbosity" })))
+            .BuildCommandDefinition();
 
             commandLineBuilder
                 .Subcommand("outer-command")
-                .Subcommand("inner-command")
                 .WriteHelp(_console);
 
             _console.ForegroundColorCalls.Should().Be(4);

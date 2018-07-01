@@ -120,7 +120,7 @@ namespace System.CommandLine
         /// <param name="offset">Number of characters to pad</param>
         private void AppendPadding(int? offset = null)
         {
-            var padding = GetPadding(offset ?? CurrentIndentation);
+            string padding = GetPadding(offset ?? CurrentIndentation);
             _console.Out.Write(padding);
         }
 
@@ -174,10 +174,10 @@ namespace System.CommandLine
                 throw new ArgumentNullException(nameof(description));
             }
 
-            var availableWidth = GetAvailableWidth();
-            var descriptionLines = SplitText(description, availableWidth);
+            int availableWidth = GetAvailableWidth();
+            IReadOnlyCollection<string> descriptionLines = SplitText(description, availableWidth);
 
-            foreach (var descriptionLine in descriptionLines)
+            foreach (string descriptionLine in descriptionLines)
             {
                 AppendLine(descriptionLine, CurrentIndentation);
             }
@@ -203,12 +203,12 @@ namespace System.CommandLine
 
             AppendText(helpItem.Invocation, CurrentIndentation);
 
-            var offset = maxInvocationWidth + ColumnGutter - helpItem.Invocation.Length;
-            var availableWidth = GetAvailableWidth();
-            var maxDescriptionWidth = availableWidth - maxInvocationWidth - ColumnGutter;
+            int offset = maxInvocationWidth + ColumnGutter - helpItem.Invocation.Length;
+            int availableWidth = GetAvailableWidth();
+            int maxDescriptionWidth = availableWidth - maxInvocationWidth - ColumnGutter;
 
-            var descriptionLines = SplitText(helpItem.Description, maxDescriptionWidth);
-            var lineCount = descriptionLines.Count;
+            IReadOnlyCollection<string> descriptionLines = SplitText(helpItem.Description, maxDescriptionWidth);
+            int lineCount = descriptionLines.Count;
 
             AppendLine(descriptionLines.FirstOrDefault(), offset);
 
@@ -219,7 +219,7 @@ namespace System.CommandLine
 
             offset = CurrentIndentation + maxInvocationWidth + ColumnGutter;
 
-            foreach (var descriptionLine in descriptionLines.Skip(1))
+            foreach (string descriptionLine in descriptionLines.Skip(1))
             {
                 AppendLine(descriptionLine, offset);
             }
@@ -239,8 +239,8 @@ namespace System.CommandLine
         /// </returns>
         protected virtual IReadOnlyCollection<string> SplitText(string text, int maxLength)
         {
-            var cleanText = Regex.Replace(text, "\\s+", " ");
-            var textLength = cleanText.Length;
+            string cleanText = Regex.Replace(text, "\\s+", " ");
+            int textLength = cleanText.Length;
 
             if (string.IsNullOrWhiteSpace(cleanText) || textLength < maxLength)
             {
@@ -250,11 +250,11 @@ namespace System.CommandLine
             var lines = new List<string>();
             var builder = new StringBuilder();
 
-            foreach (var item in cleanText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries))
+            foreach (string item in cleanText.Split(new char[0], StringSplitOptions.RemoveEmptyEntries))
             {
-                var length = item.Length + builder.Length;
+                int nextLength = item.Length + builder.Length;
 
-                if (length >= maxLength)
+                if (nextLength >= maxLength)
                 {
                     lines.Add(builder.ToString());
                     builder.Clear();
@@ -283,7 +283,7 @@ namespace System.CommandLine
         /// <returns>A new <see cref="HelpItem"/></returns>
         protected virtual HelpItem ArgumentFormatter(SymbolDefinition commandDef)
         {
-            var argHelp = commandDef?.ArgumentDefinition?.Help;
+            var argHelp = commandDef.ArgumentDefinition?.Help;
 
             return new HelpItem {
                 Invocation = $"<{argHelp?.Name}>",
@@ -298,10 +298,7 @@ namespace System.CommandLine
         /// <returns>A new <see cref="HelpItem"/></returns>
         protected virtual HelpItem OptionFormatter(SymbolDefinition symbol)
         {
-            var rawAliases = symbol.RawAliases
-                .OrderBy(alias => alias.Length);
-
-            var option = string.Join(", ", rawAliases);
+            string option = string.Join(", ",  symbol.RawAliases);
 
             if (symbol.HasArguments && !string.IsNullOrWhiteSpace(symbol.ArgumentDefinition?.Help?.Name))
             {
@@ -341,11 +338,11 @@ namespace System.CommandLine
                 .RecurseWhileNotNull(commandDef => commandDef.Parent)
                 .Reverse();
 
-            foreach (var subcommand in subcommands)
+            foreach (CommandDefinition subcommand in subcommands)
             {
                 usage.Add(subcommand.Name);
 
-                var subcommandArgHelp = GetArgumentHelp(subcommand);
+                string subcommandArgHelp = GetArgumentHelp(subcommand);
                 if (subcommand != commandDefinition && subcommandArgHelp != null)
                 {
                     usage.Add($"<{subcommandArgHelp}>");
@@ -447,7 +444,7 @@ namespace System.CommandLine
             HelpSection.Write(this, AdditionalArguments.Title, AdditionalArguments.Description);
         }
 
-        private string GetArgumentHelp(SymbolDefinition symbolDef)
+        private static string GetArgumentHelp(SymbolDefinition symbolDef)
         {
             var argDef = symbolDef?.ArgumentDefinition;
             var argHelp = argDef?.Help?.Name;
@@ -565,15 +562,15 @@ namespace System.CommandLine
                     return;
                 }
 
-                var helpItems = symbolDefinitions
+                List<HelpItem> helpItems = symbolDefinitions
                     .Select(formatter).ToList();
 
-                var maxWidth = helpItems
+                int maxWidth = helpItems
                     .Select(line => line.Invocation.Length)
                     .OrderByDescending(textLength => textLength)
                     .First();
 
-                foreach (var helpItem in helpItems)
+                foreach (HelpItem helpItem in helpItems)
                 {
                     builder.AppendHelpItem(helpItem, maxWidth);
                 }
