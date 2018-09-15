@@ -23,7 +23,12 @@ namespace RenderingPlayground
 
             WriteLine();
 
-            RenderTable(processes.OrderByDescending(p => p.PrivateMemorySize64).Take(50),
+            var topProcesses = processes
+                .OrderByDescending(p => p.PrivateMemorySize64)
+                .Take(50)
+                .ToList();
+
+            RenderTable(topProcesses,
                         table => {
                             table.RenderColumn("PID".Underline(),
                                                p => p.Id);

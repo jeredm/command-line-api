@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace System.CommandLine.Rendering
 {
@@ -34,44 +33,46 @@ namespace System.CommandLine.Rendering
         protected abstract void OnRender(T value);
 
         public void RenderTable<TItem>(
-            IEnumerable<TItem> items,
-            Action<ConsoleTable<TItem>> table)
+            IReadOnlyCollection<TItem> items,
+            Action<ConsoleTable<TItem>> renderColumnns)
         {
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
 
-            if (table == null)
+            if (renderColumnns == null)
             {
-                throw new ArgumentNullException(nameof(table));
+                throw new ArgumentNullException(nameof(renderColumnns));
             }
 
             var tableView = new ConsoleTable<TItem>(ConsoleRenderer);
 
-            table(tableView);
+            renderColumnns(tableView);
 
-            var left = 0;
+            int columnLeftPosition = 0;
 
             foreach (var column in tableView.Columns)
             {
-                column.Left = left;
-                column.CalculateSpans(items.ToList());
-                left += column.Width;
+                column.Left = columnLeftPosition;
+                column.BuildCells(items);
+                columnLeftPosition += column.Width;
             }
 
-            var columnCount = tableView.Columns.Count;
+            int columnCount = tableView.Columns.Count;
 
-            for (var rowIndex = 0; rowIndex <= items.Count(); rowIndex++)
+            for (int rowIdx = 0; rowIdx <= items.Count; rowIdx++)
             {
-                for (var columnIndex = 0; columnIndex < columnCount; columnIndex++)
-                {
-                    var column = tableView.Columns[columnIndex];
+                int topPosition = _verticalOffset + rowIdx;
+                int colIdx = 0;
 
-                    column.FlushRow(
-                        rowIndex,
-                        _verticalOffset,
-                        columnIndex == columnCount - 1,
+                foreach (var column in tableView.Columns)
+                {
+                    colIdx++;
+                    column.FlushCell(
+                        rowIdx,
+                        topPosition,
+                        colIdx == columnCount,
                         ConsoleRenderer);
                 }
             }

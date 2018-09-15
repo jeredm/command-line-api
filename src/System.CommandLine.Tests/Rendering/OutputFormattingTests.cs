@@ -74,13 +74,13 @@ namespace System.CommandLine.Tests.Rendering
             }
         }
 
-        private class ProcessTimesView : ConsoleView<IEnumerable<ProcessInfo>>
+        private class ProcessTimesView : ConsoleView<IReadOnlyCollection<ProcessInfo>>
         {
             public ProcessTimesView(ConsoleRenderer renderer, Region region = null) : base(renderer, region)
             {
             }
 
-            protected override void OnRender(IEnumerable<ProcessInfo> processes)
+            protected override void OnRender(IReadOnlyCollection<ProcessInfo> processes)
             {
                 RenderTable(
                     items: processes,

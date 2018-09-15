@@ -13,7 +13,7 @@ namespace System.CommandLine.Tests.Rendering
         private readonly TestConsole _console;
         private readonly ConsoleRenderer consoleRenderer;
 
-        #region command line data and sample for "top" 
+        #region command line data and sample for "top"
 
         public static readonly ProcessInfo[] Processes = {
             new ProcessInfo(5747, "Terminal", 18.0, TimeSpan.Parse("00:00:42.82"), 8, 3, 261, 23_000_000, 496_000, 1_360_000, 5747, 1, "sleeping", 0, true, 1916, 0.06615, 0.69163,
@@ -167,7 +167,7 @@ PID    COMMAND      %CPU TIME     #TH   #WQ  #PORT MEM    PURG   CMPRS  PGRP  PP
         {
             RenderTable(
                 items: processes,
-                table: table => {
+                renderColumnns: table => {
                     table.RenderColumn("PID", p => p.ProcessId);
                     table.RenderColumn("COMMAND", p => p.Command);
                     table.RenderColumn("%CPU", p => p.CpuPercentage);

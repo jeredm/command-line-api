@@ -240,9 +240,8 @@ namespace System.CommandLine.Tests.Rendering
                 WriteLine();
 
                 var directoryContents = directory.EnumerateFileSystemInfos()
-                                                 .OrderBy(f => f is DirectoryInfo
-                                                                   ? 0
-                                                                   : 1);
+                                                 .OrderBy(f => f is DirectoryInfo ? 0 : 1)
+                                                 .ToList();
 
                 RenderTable(
                     directoryContents,
