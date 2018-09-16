@@ -3,6 +3,10 @@ System.CommandLine
 
 This repository contains the code for System.CommandLine, a library for command line parsing, invocation, and rendering of terminal output.
 
+## Getting Started
+
+See the [Introduction](Documentation/README.md).
+
 ## Packages
 
 Packages are available on [MyGet](https://dotnet.myget.org/F/system-commandline/api/v3/index.json). The core package is `System.CommandLine.Experimental`.
