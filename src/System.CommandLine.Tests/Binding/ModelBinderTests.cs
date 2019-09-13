@@ -78,10 +78,10 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Explicitly_configured_default_values_can_be_bound_by_name_to_constructor_parameters()
         {
-            var argument = new Argument<string>("the default");
-
-            var option = new Option("--string-option",
-                                    argument: argument);
+            var option = new Option("--string-option")
+            {
+                Argument = new Argument<string>(() => "the default")
+            };
 
             var command = new Command("the-command");
             command.AddOption(option);
@@ -166,10 +166,10 @@ namespace System.CommandLine.Tests.Binding
         {
             var tempPath = Path.GetTempPath();
 
-            var argument = new Argument<DirectoryInfo>();
-
-            var option = new Option("--value",
-                                    argument: argument);
+            var option = new Option("--value")
+            {
+                Argument = new Argument<DirectoryInfo>()
+            };
 
             var command = new Command("the-command");
             command.AddOption(option);
@@ -184,10 +184,12 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Explicitly_configured_default_values_can_be_bound_by_name_to_property_setters()
         {
-            var argument = new Argument<string>("the default");
+            var argument = new Argument<string>(() => "the default");
 
-            var option = new Option("--value",
-                                    argument: argument);
+            var option = new Option("--value")
+            {
+                Argument = argument
+            };
 
             var command = new Command("the-command");
             command.AddOption(option);
@@ -206,8 +208,10 @@ namespace System.CommandLine.Tests.Binding
         {
             var command = new Command("the-command")
                           {
-                              new Option("-s", argument: new Argument<string>("the default")),
-                              new Option("--string-option", argument: new Argument<string>())
+                              new Option("--string-option")
+                              {
+                                  Argument = new Argument<string>()
+                              }
                           };
 
             var binder = new ModelBinder(typeof(ClassWithSettersAndCtorParametersWithDifferentNames));
@@ -284,14 +288,14 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_from_parent_command_arguments_are_bound_by_name_by_default()
         {
-            var argument = new Argument<int>
-                           {
-                               Name = nameof(ClassWithMultiLetterSetters.IntOption)
-                           };
-            var parentCommand = new Command("parent-command", argument: argument)
-                                {
-                                    new Command("child-command")
-                                };
+            var parentCommand = new Command("parent-command")
+            {
+                new Argument<int>
+                {
+                    Name = nameof(ClassWithMultiLetterSetters.IntOption)
+                },
+                new Command("child-command")
+            };
 
             var binder = new ModelBinder<ClassWithMultiLetterSetters>();
 
@@ -332,29 +336,6 @@ namespace System.CommandLine.Tests.Binding
         }
 
         [Fact]
-        public void Values_from_parent_command_arguments_can_be_bound_regardless_of_naming()
-        {
-            var childCommand = new Command("child-command");
-
-            var parentCommand = new Command("parent-command", argument: new Argument<int>())
-                                {
-                                    childCommand
-                                };
-
-            var binder = new ModelBinder<ClassWithMultiLetterSetters>();
-
-            binder.BindMemberFromCommand(
-                c => c.IntOption,
-                parentCommand);
-
-            var bindingContext = new BindingContext(parentCommand.Parse("parent-command 123 child-command"));
-
-            var instance = (ClassWithMultiLetterSetters)binder.CreateInstance(bindingContext);
-
-            instance.IntOption.Should().Be(123);
-        }
-
-        [Fact]
         public void Arbitrary_values_can_be_bound()
         {
             var command = new Command("the-command");
@@ -376,9 +357,11 @@ namespace System.CommandLine.Tests.Binding
         public void PropertyInfo_can_be_bound_to_option()
         {
             var command = new Command("the-command");
-            var option = new Option("--fred",
-                                    argument: new Argument<int>());
-            command.AddOption(option);
+            var option = new Option("--fred")
+            {
+                Argument = new Argument<int>()
+            };
+            command.Add(option);
 
             var type = typeof(ClassWithMultiLetterSetters);
             var binder = new ModelBinder(type);
@@ -389,28 +372,6 @@ namespace System.CommandLine.Tests.Binding
                 option);
 
             var bindingContext = new BindingContext(command.Parse("the-command --fred 42"));
-
-            var instance = (ClassWithMultiLetterSetters)binder.CreateInstance(bindingContext);
-
-            instance.IntOption.Should().Be(42);
-        }
-
-        [Fact]
-        public void PropertyInfo_can_be_bound_to_command()
-        {
-            var command = new Command("the-command");
-            var argument = new Argument<int>();
-            command.Argument = argument;
-
-            var type = typeof(ClassWithMultiLetterSetters);
-            var binder = new ModelBinder(type);
-            var propertyInfo = type.GetProperties().First();
-
-            binder.BindMemberFromValue(
-                propertyInfo,
-                command);
-
-            var bindingContext = new BindingContext(command.Parse("the-command 42"));
 
             var instance = (ClassWithMultiLetterSetters)binder.CreateInstance(bindingContext);
 

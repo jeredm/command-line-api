@@ -2,25 +2,51 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.CommandLine.Binding;
+using System.Linq;
 
 namespace System.CommandLine
 {
     public class Option : Symbol, IOption
     {
-        public Option(
-            IReadOnlyCollection<string> aliases,
-            string description = null,
-            Argument argument = null,
-            bool isHidden = false)
-            : base(aliases, description, argument, isHidden)
-        { }
+        public Option(string alias, string description = null)
+            : base(new[]
+            {
+                alias
+            }, description)
+        {
+        }
 
-        public Option(
-            string alias,
-            string description = null,
-            Argument argument = null,
-            bool isHidden = false)
-            : base(new [] {alias}, description, argument, isHidden)
-        { }
+        public Option(string[] aliases, string description = null) : base(aliases, description)
+        {
+        }
+
+        public virtual Argument Argument
+        {
+            get => Arguments.FirstOrDefault() ?? Argument.None;
+            set
+            {
+                foreach (var argument in Arguments.ToArray())
+                {
+                    Children.Remove(argument);
+                }
+
+                AddArgumentInner(value);
+            }
+        }
+
+        private IEnumerable<Argument> Arguments => Children.OfType<Argument>();
+
+        public void AddAlias(string alias) => AddAliasInner(alias);
+
+        IArgument IOption.Argument => Argument;
+
+        string IValueDescriptor.ValueName => Name;
+
+        Type IValueDescriptor.Type => Argument.ArgumentType;
+
+        bool IValueDescriptor.HasDefaultValue => Arguments.Single().HasDefaultValue;
+
+        object IValueDescriptor.GetDefaultValue() => Arguments.Single().GetDefaultValue();
     }
 }

@@ -39,15 +39,6 @@ namespace System.CommandLine
 
             foreach (var symbol in symbols)
             {
-                foreach (var childSymbol in symbol.Children.FlattenBreadthFirst(o => o.Children))
-                {
-                    if (childSymbol.Argument.Arity.MaximumNumberOfArguments != 0 && string.IsNullOrEmpty(childSymbol.Argument.Name))
-                    {
-                        throw new ArgumentException(
-                            ValidationMessages.RequiredArgumentNameMissing(childSymbol.Aliases.FirstOrDefault()));
-                    }
-                }
-
                 foreach (var alias in symbol.RawAliases)
                 {
                     foreach (var delimiter in ArgumentDelimiters)
@@ -67,7 +58,14 @@ namespace System.CommandLine
             }
             else
             {
-                RootCommand = new RootCommand(symbols: symbols);
+                rootCommand = new RootCommand();
+
+                foreach (var symbol in symbols)
+                {
+                    rootCommand.Add(symbol);
+                }
+
+                RootCommand = rootCommand;
             }
 
             _symbols.Add(RootCommand);
@@ -84,13 +82,16 @@ namespace System.CommandLine
             {
                 foreach (var symbol in symbols)
                 {
-                    foreach (var alias in symbol.RawAliases.ToList())
+                    if (symbol is Option option)
                     {
-                        if (!prefixes.All(prefix => alias.StartsWith(prefix)))
+                        foreach (var alias in option.RawAliases.ToList())
                         {
-                            foreach (var prefix in prefixes)
+                            if (!prefixes.All(prefix => alias.StartsWith(prefix)))
                             {
-                                symbol.AddAlias(prefix + alias);
+                                foreach (var prefix in prefixes)
+                                {
+                                    option.AddAlias(prefix + alias);
+                                }
                             }
                         }
                     }
@@ -111,12 +112,10 @@ namespace System.CommandLine
         public ValidationMessages ValidationMessages { get; }
 
         internal Func<BindingContext, IHelpBuilder> HelpBuilderFactory =>
-            _helpBuilderFactory ??
-            (_helpBuilderFactory = context => new HelpBuilder(context.Console));
+            _helpBuilderFactory ??= context => new HelpBuilder(context.Console);
 
         internal IReadOnlyCollection<InvocationMiddleware> Middleware =>
-            _middlewarePipeline ??
-            (_middlewarePipeline = new List<InvocationMiddleware>());
+            _middlewarePipeline ??= new List<InvocationMiddleware>();
 
         public ICommand RootCommand { get; }
 

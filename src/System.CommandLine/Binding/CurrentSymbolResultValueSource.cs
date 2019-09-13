@@ -12,14 +12,13 @@ namespace System.CommandLine.Binding
             BindingContext bindingContext,
             out object boundValue)
         {
-            if (!string.IsNullOrEmpty(valueDescriptor.Name))
+            if (!string.IsNullOrEmpty(valueDescriptor.ValueName))
             {
                 var commandResult = bindingContext.ParseResult.CommandResult;
 
                 while (commandResult != null)
                 {
-                    if (commandResult.TryGetValueForOption(
-                        valueDescriptor.Name,
+                    if (commandResult.TryGetValueForOption(valueDescriptor,
                         out var optionValue))
                     {
                         boundValue = optionValue;
@@ -27,14 +26,14 @@ namespace System.CommandLine.Binding
                     }
 
                     if (commandResult.TryGetValueForArgument(
-                        valueDescriptor.Name,
+                        valueDescriptor,
                         out var argumentValue))
                     {
                         boundValue = argumentValue;
                         return true;
                     }
 
-                    commandResult = commandResult.Parent;
+                    commandResult = commandResult.ParentCommandResult;
                 }
             }
 

@@ -2,8 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.CommandLine.Builder;
+using System.CommandLine.Invocation;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 
@@ -14,7 +18,7 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Custom_types_and_conversion_logic_can_be_specified()
         {
-            var argument = new Argument<MyCustomType>(parsed =>
+            var argument = new Argument<MyCustomType>((SymbolResult parsed, out MyCustomType value) =>
                            {
                                var custom = new MyCustomType();
                                foreach (var a in parsed.Arguments)
@@ -22,19 +26,24 @@ namespace System.CommandLine.Tests.Binding
                                    custom.Add(a);
                                }
 
-                               return ArgumentResult.Success(custom);
+                               value = custom;
+                               return true;
                            })
                            {
-                               Arity = ArgumentArity.ZeroOrMore
+                               Arity = ArgumentArity.ZeroOrMore,
+                               Name = "arg"
                            };
 
             var parser = new Parser(
-                new Command("custom", "",
-                            argument: argument));
+                new Command("custom")
+                {
+                    argument
+                });
 
             var result = parser.Parse("custom one two three");
 
-            var customType = result.CommandResult.GetValueOrDefault<MyCustomType>();
+            var customType = result.CommandResult
+                                   .GetArgumentValueOrDefault<MyCustomType>("arg");
 
             customType
                 .Values
@@ -42,13 +51,14 @@ namespace System.CommandLine.Tests.Binding
                 .BeEquivalentTo("one", "two", "three");
         }
 
+
         [Fact]
-        public void Argument_with_arity_of_one_can_be_bound_without_custom_conversion_logic_if_the_type_has_a_constructor_that_takes_a_single_string()
+        public void Option_argument_with_arity_of_one_can_be_bound_without_custom_conversion_logic_if_the_type_has_a_constructor_that_takes_a_single_string()
         {
-            var option = new Option(
-                "--file",
-                "",
-                new Argument<FileInfo>());
+            var option = new Option("--file")
+            {
+                Argument = new Argument<FileInfo>()
+            };
 
             var file = new FileInfo(Path.Combine(new DirectoryInfo("temp").FullName, "the-file.txt"));
             var result = option.Parse($"--file {file.FullName}");
@@ -63,12 +73,52 @@ namespace System.CommandLine.Tests.Binding
         }
 
         [Fact]
+        public void Command_argument_with_arity_of_one_can_be_bound_without_custom_conversion_logic_if_the_type_has_a_constructor_that_takes_a_single_string()
+        {
+            var option = new Command("the-command")
+            {
+                new Argument<FileInfo>()
+            };
+
+            var file = new FileInfo(Path.Combine(new DirectoryInfo("temp").FullName, "the-file.txt"));
+            var result = option.Parse($"{file.FullName}");
+
+            result.CommandResult
+                  .GetValueOrDefault()
+                  .Should()
+                  .BeOfType<FileInfo>()
+                  .Which
+                  .Name
+                  .Should()
+                  .Be("the-file.txt");
+        }
+
+        [Fact]
+        public void Command_argument_with_arity_of_zero_or_one_when_type_has_a_constructor_that_takes_a_single_string_returns_null_when_argument_is_not_provided()
+        {
+            var option = new Command("the-command")
+            {
+                new Argument<FileInfo>
+                {
+                    Arity = ArgumentArity.ZeroOrOne
+                }
+            };
+
+            var result = option.Parse("");
+
+            result.CommandResult
+                  .GetValueOrDefault()
+                  .Should()
+                  .BeNull();
+        }
+
+        [Fact]
         public void Argument_with_arity_of_many_can_be_called_without_custom_conversion_logic_if_the_item_type_has_a_constructor_that_takes_a_single_string()
         {
-            var option = new Option(
-                "--file",
-                "",
-                new Argument<FileInfo[]>());
+            var option = new Option("--file")
+            {
+                Argument = new Argument<FileInfo[]>()
+            };
 
             var file1 = new FileInfo(Path.Combine(new DirectoryInfo("temp").FullName, "file1.txt"));
             var file2 = new FileInfo(Path.Combine(new DirectoryInfo("temp").FullName, "file2.txt"));
@@ -86,7 +136,7 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Argument_defaults_arity_to_One_for_non_IEnumerable_types()
         {
-            var argument = new Argument<int>(s => ArgumentResult.Success(1));
+            var argument = new Argument<int>();
 
             argument.Arity.Should().BeEquivalentTo(ArgumentArity.ExactlyOne);
         }
@@ -104,10 +154,10 @@ namespace System.CommandLine.Tests.Binding
         {
             var command = new Command("the-command")
                           {
-                              Argument = new Argument<int?>()
+                            new Argument<int?>()
                           };
 
-            command.Argument.Arity.Should().BeEquivalentTo(ArgumentArity.ZeroOrOne);
+            command.Arguments.Single().Arity.Should().BeEquivalentTo(ArgumentArity.ZeroOrOne);
         }
 
         [Fact]
@@ -135,32 +185,27 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Argument_bool_will_default_to_true_when_no_argument_is_passed()
         {
-            var parser = new Parser(new Option("-x", "", new Argument<bool>()));
+            var parser = new Parser(new Option("-x")
+            {
+                Argument = new Argument<bool>()
+            });
 
             var result = parser.Parse("-x");
 
-            result.Errors
-                  .Should()
-                  .BeEmpty();
-            result["x"].ArgumentResult
-                       .Should()
-                       .BeOfType<SuccessfulArgumentResult>()
-                       .Which
-                       .Value
-                       .Should()
-                       .Be(true);
+            result.Errors.Should().BeEmpty();
             result.ValueForOption("x").Should().Be(true);
         }
 
         [Fact]
         public void Argument_parses_as_the_default_value_when_the_option_has_not_been_applied()
         {
-            var command = new Command("something", "",
-                                      new[]
-                                      {
-                                          new Option("-x", "",
-                                                     new Argument<int>(123))
-                                      });
+            var command = new Command("something")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument<int>(() => 123)
+                }
+            };
 
             var result = command.Parse("something");
 
@@ -172,10 +217,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Argument_does_not_parse_as_the_default_value_when_the_option_has_been_applied()
         {
-            var command = new Command("something", "", new[] {
-                new Option("-x", "",
-                           new Argument<int>(123))
-            });
+            var command = new Command("something")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument<int>(() => 123)
+                }
+            };
 
             var result = command.Parse("something -x 456");
 
@@ -191,10 +239,13 @@ namespace System.CommandLine.Tests.Binding
         [InlineData("the-command -x=true")]
         public void Bool_does_not_parse_as_the_default_value_when_the_option_has_been_applied(string commandLine)
         {
-            var command = new Command("the-command", "", new[] {
-                new Option("-x", "",
-                           new Argument<bool>(false))
-            });
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument<bool>(() => false)
+                }
+            };
 
             command
                 .Parse(commandLine)
@@ -207,19 +258,24 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void When_argument_cannot_be_parsed_as_the_specified_type_then_getting_value_throws()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    new[] { "-o", "--one" },
-                    "",
-                    new Argument<int>(symbol => {
-                            if (int.TryParse(symbol.Arguments.Single(), out int intValue))
-                            {
-                                return ArgumentResult.Success(intValue);
-                            }
+            var command = new Command("the-command")
+            {
+                new Option(new[] { "-o", "--one" })
+                {
+                    Argument = new Argument<int>((SymbolResult symbol, out int value) =>
+                    {
+                        if (int.TryParse(symbol.Arguments.Single(), out value))
+                        {
+                            return true;
+                        }
 
-                            return ArgumentResult.Failure($"'{symbol.Token}' is not an integer");
-                        }))
-            });
+                        symbol.ErrorMessage = $"'{symbol.Token.Value}' is not an integer";
+
+                        return false;
+                    }),
+                    Description = ""
+                }
+            };
 
             var result = command.Parse("the-command -o not-an-int");
 
@@ -231,20 +287,22 @@ namespace System.CommandLine.Tests.Binding
                     .Which
                     .Message
                     .Should()
-                    .Be("'-o' is not an integer");
+                    .Be("'not-an-int' is not an integer");
         }
 
         [Fact]
         public void By_default_an_option_with_zero_or_one_argument_parses_as_the_argument_string_value_by_default()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    "-x",
-                    "",
-                    new Argument
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument
                     {
                         Arity = ArgumentArity.ZeroOrOne
-                    })});
+                    }
+                }
+            };
 
             var result = command.Parse("the-command -x the-argument");
 
@@ -257,14 +315,16 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void By_default_an_option_with_exactly_one_argument_parses_as_the_argument_string_value_by_default()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    "-x",
-                    "",
-                    new Argument
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument
                     {
                         Arity = ArgumentArity.ExactlyOne
-                    })});
+                    }
+                }
+            };
 
             var result = command.Parse("the-command -x the-argument");
 
@@ -277,15 +337,16 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void When_exactly_one_argument_is_expected_and_none_are_provided_then_getting_value_throws()
         {
-            var option = new Option("-x", "",
-                                    new Argument
-                                    {
-                                        Arity = ArgumentArity.ExactlyOne
-                                    });
-
-            var command = new Command("the-command", "", new[] {
-                option
-            });
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument
+                    {
+                        Arity = ArgumentArity.ExactlyOne
+                    }
+                }
+            };
 
             var result = command.Parse("the-command -x");
 
@@ -296,21 +357,22 @@ namespace System.CommandLine.Tests.Binding
                     .Which
                     .Message
                     .Should()
-                    .Be(ValidationMessages.Instance.RequiredArgumentMissing(new OptionResult(option)));
+                    .Be("Required argument missing for option: -x");
         }
 
         [Fact]
         public void When_zero_or_more_arguments_of_unspecified_type_are_expected_and_none_are_provided_then_getting_value_returns_an_empty_sequence_of_strings()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    "-x",
-                    "",
-                    new Argument
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument
                     {
                         Arity = ArgumentArity.ZeroOrMore
-                    })
-            });
+                    }
+                }
+            };
 
             var result = command.Parse("the-command -x");
 
@@ -327,21 +389,31 @@ namespace System.CommandLine.Tests.Binding
         public void
             When_zero_or_more_arguments_of_unspecified_type_are_expected_and_none_are_provided_and_there_is_a_default_then_getting_value_returns_default_in_an_empty_sequence_of_strings()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrMore
-                });
+                }
+            };
 
             option.Argument.SetDefaultValue(() => "the-default");
 
-            var command = new Command("the-command", "",
-                                      new[]
-                                      {
-                                          option
-                                      });
+            IReadOnlyCollection<Symbol> symbols = new[]
+            {
+                option
+            };
+            var command1 = new Command(
+                "the-command",
+                ""
+            );
+
+            foreach (var symbol in symbols)
+            {
+                command1.Add(symbol);
+            }
+
+            var command = command1;
 
             var result = command.Parse("the-command");
 
@@ -357,17 +429,16 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void When_one_or_more_arguments_of_unspecified_type_are_expected_and_none_are_provided_then_getting_value_throws()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var command = new Command("the-command")
+            {
+                new Option("-x")
                 {
-                    Arity = ArgumentArity.OneOrMore
-                });
-
-            var command = new Command("the-command", "", new[] {
-                option
-            });
+                    Argument = new Argument
+                    {
+                        Arity = ArgumentArity.OneOrMore
+                    }
+                }
+            };
 
             var result = command.Parse("the-command -x");
 
@@ -378,21 +449,22 @@ namespace System.CommandLine.Tests.Binding
                     .Which
                     .Message
                     .Should()
-                    .Be(ValidationMessages.Instance.RequiredArgumentMissing(new OptionResult(option)));
+                    .Be("Required argument missing for option: -x");
         }
 
         [Fact]
         public void By_default_an_option_that_allows_multiple_arguments_and_is_passed_multiple_arguments_parses_as_a_sequence_of_strings()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    "-x",
-                    "",
-                    new Argument
+            var command = new Command("the-command")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument
                     {
                         Arity = ArgumentArity.ZeroOrMore
-                    })
-            });
+                    }
+                }
+            };
 
             command.Parse("the-command -x arg1 -x arg2")
                    .CommandResult
@@ -404,14 +476,16 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void By_default_an_option_that_allows_multiple_arguments_and_is_passed_one_argument_parses_as_a_sequence_of_strings()
         {
-            var command = new Command("the-command", "", new[] {
-                new Option(
-                    "-x", "",
-                    new Argument
+            var command = new Command("the-command")
+            { 
+                new Option("-x")
+                {
+                    Argument = new Argument
                     {
                         Arity = ArgumentArity.ZeroOrMore
-                    })
-            });
+                    }
+                }
+            };
 
             command.Parse("the-command -x arg1").CommandResult
                    .ValueForOption("x")
@@ -420,9 +494,9 @@ namespace System.CommandLine.Tests.Binding
         }
 
         [Fact]
-        public void The_default_value_of_a_command_with_no_arguments_is_an_empty_collection()
+        public void The_default_value_of_a_command_with_no_arguments_is_null()
         {
-            var result = new CommandResult(new Command("-x"));
+            var result = new Command("x").Parse("").CommandResult;
 
             var valueOrDefault = result.GetValueOrDefault();
 
@@ -459,19 +533,31 @@ namespace System.CommandLine.Tests.Binding
         }
 
         [Fact]
-        public void The_default_value_of_an_option_with_no_arguments_is_true()
+        public void The_default_value_of_an_option_with_no_arguments_is_null()
         {
-            var command = new OptionResult(new Option("-x", ""));
+            var option = new Option("-x");
 
-            command.GetValueOrDefault().Should().Be(null);
+            var command =
+                new Command("the-command")
+                {
+                    option
+                };
+
+            var result = command.Parse("-x");
+
+            result.FindResultFor(option)
+                  .GetValueOrDefault()
+                  .Should()
+                  .BeNull();
         }
 
         [Fact]
         public void By_default_an_option_without_arguments_parses_as_false_when_it_is_not_applied()
         {
-            var command = new Command("something", "", new[] {
-                new Option("-x", "")
-            });
+            var command = new Command("something")
+            {
+                new Option("-x")
+            };
 
             var result = command.Parse("something");
 
@@ -484,13 +570,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void An_option_with_a_default_value_parses_as_the_default_value_when_the_option_has_not_been_applied()
         {
-            var command = new Command("something", "",
-                                      new[]
-                                      {
-                                          new Option(
-                                              "-x", "",
-                                              new Argument<string>("123"))
-                                      });
+            var command = new Command("something")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument<string>(() => "123")
+                }
+            };
 
             var result = command.Parse("something");
 
@@ -504,14 +590,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void A_default_value_of_a_non_string_type_can_be_specified()
         {
-            var command = new Command(
-                "something", "",
-                new[]
+            var command = new Command("something")
+            {
+                new Option("-x")
                 {
-                    new Option(
-                        "-x", "",
-                        new Argument<int>(123))
-                });
+                    Argument = new Argument<int>(() => 123)
+                }
+            };
 
             var result = command.Parse("something");
 
@@ -527,14 +612,13 @@ namespace System.CommandLine.Tests.Binding
         {
             var directoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
 
-            var command = new Command(
-                "something", "",
-                new[]
+            var command = new Command("something")
+            {
+                new Option("-x")
                 {
-                    new Option(
-                        "-x", "",
-                        new Argument<DirectoryInfo>(directoryInfo))
-                });
+                    Argument = new Argument<DirectoryInfo>(() => directoryInfo)
+                }
+            };
 
             var result = command.Parse("something");
 
@@ -548,9 +632,10 @@ namespace System.CommandLine.Tests.Binding
         {
             var directoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
 
-            var command = new Command(
-                "something", "",
-                argument: new Argument<DirectoryInfo>(directoryInfo));
+            var command = new Command("something")
+            {
+                new Argument<DirectoryInfo>(() => directoryInfo)
+            };
 
             var result = command.Parse("something");
 
@@ -564,13 +649,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void An_option_argument_with_a_default_argument_can_be_converted_to_the_requested_type()
         {
-            var command = new Command("something", "",
-                                      new[]
-                                      {
-                                          new Option(
-                                              "-x", "",
-                                              new Argument<string>("123"))
-                                      });
+            var command = new Command("something")
+            {
+                new Option("-x")
+                {
+                    Argument = new Argument<string>(() => "123")
+                }
+            };
 
             var result = command.Parse("something");
 
@@ -582,8 +667,10 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void A_command_argument_with_a_default_value_can_be_converted_to_the_requested_type()
         {
-            var command = new Command("something", "",
-                                      argument: new Argument<string>("123"));
+            var command = new Command("something")
+            {
+                new Argument<string>(() => "123")
+            };
 
             var result = command.Parse("something");
 
@@ -595,15 +682,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Specifying_an_option_argument_overrides_the_default_value()
         {
-            var command = new Command(
-                "something", "",
-                new[]
+            var command = new Command("something")
+            {
+                new Option("-x")
                 {
-                    new Option(
-                        "-x",
-                        "",
-                        new Argument<int>(123))
-                });
+                    Argument = new Argument<int>(() => 123)
+                }
+            };
 
             var result = command.Parse("something -x 456");
 
@@ -615,9 +700,15 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void When_custom_converter_is_specified_and_an_argument_is_of_the_wrong_type_then_an_error_is_returned()
         {
-            var command = new Command(
-                "tally", "",
-                argument: new Argument<int>(a => ArgumentResult.Failure("Could not parse int")));
+            var command = new Command("tally")
+            {
+                new Argument<int>((SymbolResult symbolResult, out int value) =>
+                {
+                    value = default;
+                    symbolResult.ErrorMessage = "Could not parse int";
+                    return false;
+                })
+            };
 
             var result = command.Parse("tally one");
 
@@ -630,27 +721,34 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void When_custom_conversion_fails_then_an_option_does_not_accept_further_arguments()
         {
-            var command = new Command("the-command", argument: new Argument<string>());
-
-            command.AddOption(new Option("-x",
-                                         argument: new Argument<string>(_ => ArgumentResult.Failure("No thank you"))));
+            var command = new Command("the-command")
+            {
+                new Argument<string>(),
+                new Option("-x")
+                {
+                    Argument = new Argument<string>((SymbolResult symbolResult, out string value) =>
+                    {
+                        value = null;
+                        return false;
+                    })
+                }
+            };
 
             var result = command.Parse("the-command -x nope yep");
 
             result.CommandResult.Arguments.Count.Should().Be(1);
-            result.Errors.Should().Contain(e => e.Message == "No thank you");
         }
 
         [Fact]
         public void Values_can_be_correctly_converted_to_int_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("-x 123").ValueForOption<int>("x");
 
@@ -660,13 +758,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_nullable_int_with_no_value_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("").ValueForOption<int?>("x");
 
@@ -676,13 +774,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_nullable_int_with_a_value_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("-x 123").ValueForOption<int?>("x");
 
@@ -692,13 +790,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_decimal_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("-x 123.456").ValueForOption<decimal>("x");
 
@@ -708,13 +806,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_double_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("-x 123.456").ValueForOption<double>("x");
 
@@ -724,13 +822,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_float_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var value = option.Parse("-x 123.456").ValueForOption<float>("x");
 
@@ -740,13 +838,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Options_with_no_arguments_specified_can_be_correctly_converted_to_bool_without_the_parser_specifying_it()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             option.Parse("-x").ValueForOption<bool>("x").Should().BeTrue();
         }
@@ -754,13 +852,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Options_with_arguments_specified_can_be_correctly_converted_to_bool_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             option.Parse("-x false").ValueForOption<bool>("x").Should().BeFalse();
             option.Parse("-x true").ValueForOption<bool>("x").Should().BeTrue();
@@ -769,13 +867,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_array_of_int_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrMore
-                });
+                }
+            };
 
             var value = option.Parse("-x 1 -x 2 -x 3").ValueForOption<int[]>("x");
 
@@ -785,13 +883,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_List_of_int_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrMore
-                });
+                }
+            };
 
             var value = option.Parse("-x 1 -x 2 -x 3").ValueForOption<List<int>>("x");
 
@@ -801,13 +899,13 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Values_can_be_correctly_converted_to_IEnumerable_of_int_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrMore
-                });
+                }
+            };
 
             var value = option.Parse("-x 1 -x 2 -x 3").ValueForOption<IEnumerable<int>>("x");
 
@@ -817,12 +915,14 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Enum_values_can_be_correctly_converted_based_on_enum_value_name_without_the_parser_specifying_a_custom_converter()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument<DayOfWeek>());
+            var option = new Option("-x")
+            {
+                Argument = new Argument<DayOfWeek>()
+            };
 
-            var value = option.Parse("-x Monday").ValueForOption<DayOfWeek>("x");
+            var parseResult = option.Parse("-x Monday");
+
+            var value = parseResult.ValueForOption<DayOfWeek>("x");
 
             value.Should().Be(DayOfWeek.Monday);
         }
@@ -830,29 +930,29 @@ namespace System.CommandLine.Tests.Binding
         [Fact]
         public void Enum_values_that_cannot_be_parsed_result_in_an_informative_error()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument<DayOfWeek>());
+            var option = new Option("-x")
+            {
+                Argument = new Argument<DayOfWeek>()
+            };
 
             var value = option.Parse("-x Notaday");
 
             value.Errors
                  .Select(e => e.Message)
                  .Should()
-                 .Contain("Cannot parse argument 'Notaday' as System.DayOfWeek.");
+                 .Contain("Cannot parse argument 'Notaday' for option '-x' as expected type System.DayOfWeek.");
         }
 
         [Fact]
         public void When_getting_values_and_specifying_a_conversion_type_that_is_not_supported_then_it_throws()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var result = option.Parse("-x not-an-int");
 
@@ -863,19 +963,19 @@ namespace System.CommandLine.Tests.Binding
                     .Which
                     .Message
                     .Should()
-                    .Be("Cannot parse argument 'not-an-int' as System.Int32.");
+                    .Be("Cannot parse argument 'not-an-int' for option '-x' as expected type System.Int32.");
         }
 
         [Fact]
         public void When_getting_an_array_of_values_and_specifying_a_conversion_type_that_is_not_supported_then_it_throws()
         {
-            var option = new Option(
-                "-x",
-                "",
-                new Argument
+            var option = new Option("-x")
+            {
+                Argument = new Argument
                 {
                     Arity = ArgumentArity.ZeroOrOne
-                });
+                }
+            };
 
             var result = option.Parse("-x not-an-int -x 2");
 
@@ -886,7 +986,39 @@ namespace System.CommandLine.Tests.Binding
                     .Which
                     .Message
                     .Should()
-                    .Be("Cannot parse argument 'not-an-int' as System.Int32[].");
+                    .Be("Option '-x' expects a single argument but 2 were provided.");
+        }
+
+        [Fact]
+        public async Task Custom_argument_converter_is_only_called_once()
+        {
+            var callCount = 0;
+            var handlerWasCalled = false;
+
+            var parser = new CommandLineBuilder(
+                             new RootCommand
+                             {
+                                 Handler = CommandHandler.Create<int>(Run)
+                             })
+                         .AddOption(new Option("--value")
+                         {
+                             Argument = new Argument<int>(TryConvertInt)
+                         })
+                         .UseDefaults()
+                         .Build();
+
+            await parser.InvokeAsync("--value 42");
+            
+            callCount.Should().Be(1);
+            handlerWasCalled.Should().BeTrue();
+
+            bool TryConvertInt(SymbolResult result, out int value)
+            {
+                callCount++;
+                return int.TryParse(result.Token.Value, out value);
+            }
+
+            void Run(int value) => handlerWasCalled = true;
         }
 
         public class MyCustomType

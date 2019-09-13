@@ -35,24 +35,11 @@ namespace System.CommandLine.Binding
         {
             NamedValueSources.Add(
                 (property.PropertyType, property.Name),
-                new SymbolValueSource(option));
-        }
-
-        public void BindMemberFromValue(PropertyInfo property, Command command)
-        {
-            NamedValueSources.Add(
-                (property.PropertyType, property.Name),
-                new SymbolValueSource(command));
+                new OptionValueSource(option));
         }
 
         public object CreateInstance(BindingContext context)
         {
-            if (context.TryGetValueSource(ValueDescriptor, out var valueSource) &&
-                valueSource.TryGetValue(ValueDescriptor, context, out var fromBindingContext))
-            {
-                return fromBindingContext;
-            }
-
             var values = GetValues(context, new[] { ValueDescriptor }, false);
 
             if (values.Count == 1 &&
@@ -73,12 +60,7 @@ namespace System.CommandLine.Binding
             BindingContext context,
             out object instance)
         {
-            ConstructorDescriptor targetConstructorDescriptor = null;
-
-            if (_modelDescriptor.ConstructorDescriptors.Count == 1)
-            {
-                targetConstructorDescriptor = _modelDescriptor.ConstructorDescriptors[0];
-            }
+            var targetConstructorDescriptor = _modelDescriptor.TargetConstructor;
 
             if (targetConstructorDescriptor == null)
             {
@@ -89,7 +71,7 @@ namespace System.CommandLine.Binding
             var boundConstructorArguments = GetValues(
                 context, 
                 targetConstructorDescriptor.ParameterDescriptors,
-                false);
+                true);
 
             if (boundConstructorArguments.Count != targetConstructorDescriptor.ParameterDescriptors.Count)
             {
@@ -123,7 +105,7 @@ namespace System.CommandLine.Binding
         private IReadOnlyList<BoundValue> GetValues(
             BindingContext bindingContext,
             IReadOnlyList<IValueDescriptor> valueDescriptors,
-            bool includeMissingValues = true)
+            bool includeMissingValues)
         {
             var values = new List<BoundValue>();
 
@@ -141,9 +123,17 @@ namespace System.CommandLine.Binding
                     boundValue = BoundValue.DefaultForValueDescriptor(valueDescriptor);
                 }
 
-                if (boundValue == null && includeMissingValues)
+                if (boundValue == null)
                 {
-                    boundValue = BoundValue.DefaultForType(valueDescriptor);
+                    if (includeMissingValues)
+                    {
+                        if (valueDescriptor is ParameterDescriptor parameterDescriptor &&
+                            parameterDescriptor.Parent?.Parent is ModelDescriptor modelDescriptor && 
+                            ShouldPassNullToConstructor(modelDescriptor))
+                        {
+                            boundValue = BoundValue.DefaultForType(valueDescriptor);
+                        }
+                    }
                 }
 
                 if (boundValue != null)
@@ -160,7 +150,7 @@ namespace System.CommandLine.Binding
             IValueDescriptor valueDescriptor)
         {
             var type = valueDescriptor.Type;
-            var name = valueDescriptor.Name;
+            var name = valueDescriptor.ValueName;
 
             if (NamedValueSources.TryGetValue(
                 (type, name),
@@ -180,6 +170,16 @@ namespace System.CommandLine.Binding
         public override string ToString() =>
             $"{_modelDescriptor.ModelType.Name}";
 
+        private bool ShouldPassNullToConstructor(ModelDescriptor modelDescriptor)
+        {
+            if (modelDescriptor.TargetConstructor is ConstructorDescriptor ctor)
+            {
+                return ctor.ParameterDescriptors.All(d => d.AllowsNull);
+            }
+
+            return !modelDescriptor.ModelType.IsNullable();
+        }
+
         private class AnonymousValueDescriptor : IValueDescriptor
         {
             public Type Type { get; }
@@ -189,7 +189,7 @@ namespace System.CommandLine.Binding
                 Type = modelType;
             }
 
-            public string Name => null;
+            public string ValueName => null;
 
             public bool HasDefaultValue => false;
 
